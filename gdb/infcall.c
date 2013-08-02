@@ -495,6 +495,7 @@ call_function_by_hand_dummy (struct value *function,
   struct infcall_control_state *inf_status;
   struct cleanup *inf_status_cleanup;
   struct infcall_suspend_state *caller_state;
+  struct symbol *sym;
   CORE_ADDR funaddr;
   CORE_ADDR real_pc;
   struct type *ftype = check_typedef (value_type (function));
@@ -544,6 +545,20 @@ call_function_by_hand_dummy (struct value *function,
   /* Ensure that the initial SP is correctly aligned.  */
   {
     CORE_ADDR old_sp = get_frame_sp (frame);
+
+    /* If we have a symbol in the inferior called __debug_call_dummy_stack
+       we assume that the symbol points to 40 pages (0x1000 bytes) of memory
+       that we should use instead of the stack pointer when setting up a
+       dummy call frame.
+
+       This is useful for any program that have a non-linear, managed stack
+       where allocation is not safe to do by just simply decrementing the sp. */
+
+    sym = lookup_symbol("__debug_call_dummy_stack", 0, VAR_DOMAIN, 0);
+    if (sym != NULL)
+      {
+        old_sp = value_raw_address(value_of_variable (sym, NULL)) + 40 * 0x1000;
+      }
 
     if (gdbarch_frame_align_p (gdbarch))
       {
