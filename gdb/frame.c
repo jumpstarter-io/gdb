@@ -1871,6 +1871,11 @@ get_prev_frame_always_1 (struct frame_info *this_frame)
       return NULL;
     }
 
+  /* Inner frame check when unwinding stack removed because it breaks
+   * support for segmented stacks in librcd. We deprecate this sort of
+   * heuristic in this version of gdb. */
+#if 0
+
   /* Check that this frame's ID isn't inner to (younger, below, next)
      the next frame.  This happens when a frame unwind goes backwards.
      This check is valid only if this frame and the next frame are NORMAL.
@@ -1903,6 +1908,7 @@ get_prev_frame_always_1 (struct frame_info *this_frame)
 	  return NULL;
 	}
     }
+#endif
 
   /* Check that this and the next frame do not unwind the PC register
      to the same memory location.  If they do, then even though they
